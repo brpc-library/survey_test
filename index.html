@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기술트리 수요조사</title>
+<style>
+  :root{
+    --ink:#1c2230;
+    --paper:#f6f5f1;
+    --panel:#ffffff;
+    --line:#d8d5cb;
+    --branch:#2f6f5e;   /* 대분류 */
+    --branch-2:#5b7fae; /* 중분류 */
+    --branch-3:#9a6b3f; /* 소분류 */
+    --accent:#c65b3a;   /* 핵심기술 강조 */
+    --muted:#767267;
+    --focus:#2f6f5e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Pretendard","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+    line-height:1.5;
+    padding-bottom:120px;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:36px 20px 60px;}
+
+  header.top{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px;
+    margin-bottom:24px;
+  }
+  .eyebrow{
+    font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  h1{
+    font-size:28px;
+    margin:6px 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .desc{color:var(--muted);font-size:14px;max-width:640px;}
+
+  .respondent{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin:20px 0 28px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px 16px;
+  }
+  .respondent .field{display:flex;flex-direction:column;gap:4px;}
+  .respondent label{font-size:12px;color:var(--muted);font-weight:600;}
+  .respondent input{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .respondent input:focus{outline:2px solid var(--focus);outline-offset:1px;}
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    font-size:13px;
+  }
+  .toolbar .count{color:var(--muted);}
+  .toolbar .btns button{
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    border-radius:6px;
+    padding:6px 12px;
+    font-size:12px;
+    cursor:pointer;
+    margin-left:6px;
+    font-family:inherit;
+  }
+  .toolbar .btns button:hover{background:var(--ink);color:var(--paper);}
+
+  /* ---- Tree levels ---- */
+  details.level{
+    border-left:3px solid var(--line);
+    margin-bottom:8px;
+    background:var(--panel);
+    border-radius:0 8px 8px 0;
+  }
+  details.level > summary{
+    list-style:none;
+    cursor:pointer;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    user-select:none;
+  }
+  details.level > summary::-webkit-details-marker{display:none;}
+  summary .arrow{
+    display:inline-block;
+    transition:transform .15s ease;
+    font-size:11px;
+    color:var(--muted);
+    width:12px;
+  }
+  details[open] > summary .arrow{transform:rotate(90deg);}
+
+  .lv-major{border-left-color:var(--branch);}
+  .lv-major > summary{font-size:17px;color:var(--branch);}
+  .lv-major .tag{background:var(--branch);}
+
+  .lv-mid{border-left-color:var(--branch-2);margin:8px 10px 8px 14px;}
+  .lv-mid > summary{font-size:15px;color:var(--branch-2);}
+  .lv-mid .tag{background:var(--branch-2);}
+
+  .lv-sub{border-left-color:var(--branch-3);margin:8px 10px 8px 14px;background:#fbfaf7;}
+  .lv-sub > summary{font-size:14px;color:var(--branch-3);}
+  .lv-sub .tag{background:var(--branch-3);}
+
+  .tag{
+    font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+    font-size:10px;
+    color:#fff;
+    padding:2px 6px;
+    border-radius:4px;
+    letter-spacing:.03em;
+  }
+  .body-inner{padding:4px 14px 14px 20px;}
+
+  /* ---- 핵심기술 row ---- */
+  .tech{
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    padding:12px 14px;
+    margin:10px 4px 10px 10px;
+  }
+  .tech.checked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .tech-head{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .tech-head input[type=checkbox]{
+    width:18px;height:18px;
+    margin-top:2px;
+    accent-color:var(--accent);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  .tech-name{font-weight:700;font-size:14px;color:var(--ink);}
+  .tech-examples{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:3px;
+  }
+  .tech-examples b{color:var(--muted);font-weight:600;}
+  .example-chip{
+    display:inline-block;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1px 8px;
+    margin:2px 3px 0 0;
+    font-size:11px;
+  }
+
+  .tech-detail{
+    display:none;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+    gap:14px;
+  }
+  .tech.checked .tech-detail{display:flex;flex-wrap:wrap;}
+
+  .priority-group{display:flex;flex-direction:column;gap:6px;min-width:170px;}
+  .priority-group .lbl{font-size:11px;color:var(--muted);font-weight:600;}
+  .priority-opts{display:flex;gap:6px;}
+  .priority-opts label{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:5px 10px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .priority-opts input{accent-color:var(--accent);}
+  .priority-opts input:checked + span{font-weight:700;}
+  .priority-opts label:has(input:checked){border-color:var(--accent);background:#fbeee9;}
+
+  .comment-group{flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px;}
+  .comment-group .lbl{font-size:11px;color:var(--muted);font-weight:600;}
+  .comment-group textarea{
+    width:100%;
+    resize:vertical;
+    min-height:44px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .comment-group textarea:focus{outline:2px solid var(--focus);outline-offset:1px;}
+
+  /* ---- footer / submit ---- */
+  .submit-bar{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:14px 20px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    align-items:center;
+    box-shadow:0 -4px 12px rgba(0,0,0,.04);
+  }
+  .submit-bar .inner{max-width:920px;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .status{font-size:13px;color:var(--muted);}
+  .status.ok{color:var(--branch);font-weight:700;}
+  .status.err{color:var(--accent);font-weight:700;}
+  button.primary{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:11px 22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  button.primary:hover{background:var(--branch);}
+  button.primary:disabled{opacity:.5;cursor:default;}
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:8px;
+    padding:11px 16px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+
+  @media (max-width:600px){
+    .respondent{grid-template-columns:1fr;}
+    .submit-bar .inner{flex-direction:column;align-items:stretch;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Technology Roadmap · 수요조사</div>
+    <h1>기술트리 수요조사</h1>
+    <p class="desc">대분류 → 중분류 → 소분류 순으로 펼쳐지며, 각 핵심기술 항목에서 개발 필요 여부와 우선순위, 의견을 남겨주세요. 총 대분류 4개 · 중분류 25개 · 소분류 65개 · 핵심기술 145개로 구성되어 있어 처음엔 첫 번째 대분류만 펼쳐져 있습니다. 관심 있는 분류만 펼쳐서 확인해주세요.</p>
+  </header>
+
+  <div class="respondent">
+    <div class="field">
+      <label for="r-name">이름 / 소속 (필수)</label>
+      <input id="r-name" type="text" required placeholder="예: 홍길동 / OO연구실">
+    </div>
+    <div class="field">
+      <label for="r-email">이메일 (필수 · 중복 제출 확인용)</label>
+      <input id="r-email" type="email" required placeholder="예: name@company.com">
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <span class="count" id="checkedCount">선택된 핵심기술: 0개</span>
+    <span class="btns">
+      <button type="button" id="expandAll">전체 펼치기</button>
+      <button type="button" id="collapseAll">전체 접기</button>
+    </span>
+  </div>
+
+  <div id="tree"></div>
+</div>
+
+<div class="submit-bar">
+  <div class="inner">
+    <span class="status" id="statusMsg">응답을 마치면 제출 버튼을 눌러주세요.</span>
+    <span>
+      <button type="button" class="ghost" id="downloadBtn">결과 파일로 저장</button>
+      <button type="button" class="primary" id="submitBtn">응답 제출하기</button>
+    </span>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1) 구글시트 연동 웹앱 URL
+   Apps Script 배포 후 발급되는 URL을 아래에 붙여넣으세요.
+   (미설정 상태에서도 "결과 파일로 저장"은 정상 동작합니다)
+========================================================= */
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaUFqZMvoitWczby6poKDsCCx-y3k-p1oFw1ayTpAgLCTg4jNNLROOitk58tiTBt2Z/exec";
+
+/* =========================================================
+   2) 기술트리 데이터 (뇌 정보/뇌지도 기술트리)
+   구조: 대분류 > 중분류 > 소분류 > 핵심기술 > 관련 기법 예시
+   대분류 4개: 뇌정보 획득 / 단일 모달 뇌지도 재구성 / 멀티모달·질환특화 뇌지도 구축 / 디지털 뇌모델 구현 및 활용
+========================================================= */
+const DATA = [
+  {
+    "name": "뇌정보 획득",
+    "children": [
+      {
+        "name": "1. 거시 구조/기능 생체 영상",
+        "children": [
+          {
+            "name": "뇌 영역별 구조/미세조직 영상",
+            "techs": [
+              {
+                "name": "고해상도 뇌 해부구조 및 피질·피질하 영역 영상 획득 기술",
+                "examples": [
+                  "Structural MRI (T1/T2)",
+                  "Quantitative MRI (qMRI)",
+                  "MP2RAGE",
+                  "MPRAGE"
+                ]
+              },
+              {
+                "name": "뇌조직 미세구조·수초·철·혈관 특성의 다중 정량영상 획득 기술",
+                "examples": [
+                  "Quantitative MRI",
+                  "Myelin Imaging",
+                  "Susceptibility Imaging (SWI/QSM)",
+                  "Diffusion MRI (DTI·DKI·NODDI)",
+                  "Vessel Wall Imaging"
+                ]
+              },
+              {
+                "name": "초고자장 기반 미세 뇌구조 및 피질층 생체영상 획득 기술",
+                "examples": [
+                  "Ultra-high-field MRI (7T+)",
+                  "Laminar MRI",
+                  "Layer-specific fMRI"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "뇌 영역별 구조연결성 영상",
+            "techs": [
+              {
+                "name": "장거리 백질 신경섬유 경로의 비침습적 3차원 추적 기술",
+                "examples": [
+                  "Deterministic Tractography",
+                  "Probabilistic Tractography",
+                  "Global Tractography"
+                ]
+              },
+              {
+                "name": "교차·분기 섬유를 구분하는 고각도·고해상도 확산영상 기술",
+                "examples": [
+                  "High Angular Resolution Diffusion Imaging (HARDI)",
+                  "Diffusion Spectrum Imaging (DSI)",
+                  "Multi-shell Diffusion MRI"
+                ]
+              },
+              {
+                "name": "뇌 영역 간 구조연결 강도 및 방향성 정량화 기술",
+                "examples": [
+                  "Structural Connectome Reconstruction",
+                  "Connectivity Matrix Construction",
+                  "Structural Connectome Analysis"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "뇌 영역별 기능활성·기능연결 영상",
+            "techs": [
+              {
+                "name": "과제 및 안정상태의 뇌 기능활성 영상 획득 기술",
+                "examples": [
+                  "BOLD-fMRI",
+                  "Task-based fMRI",
+                  "Resting-state fMRI",
+                  "Laminar fMRI"
+                ]
+              },
+              {
+                "name": "뇌 영역 간 동적 기능연결성 및 네트워크 변화 측정 기술",
+                "examples": [
+                  "Functional Connectivity (FC)",
+                  "Dynamic Functional Connectivity (dFC)",
+                  "Functional Connectivity Imaging"
+                ]
+              },
+              {
+                "name": "신경혈관결합(Neurovascular coupling) 정량 기능영상 기술",
+                "examples": [
+                  "BOLD-fMRI",
+                  "Calibrated fMRI",
+                  "Arterial Spin Labeling (ASL)",
+                  "Cerebrovascular Reactivity (CVR) Imaging"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "분자·대사 생체영상",
+            "techs": [
+              {
+                "name": "신경전달물질·수용체·병리 단백질의 생체 내 정량영상 기술",
+                "examples": [
+                  "PET",
+                  "SPECT",
+                  "Receptor Imaging",
+                  "MRS"
+                ]
+              },
+              {
+                "name": "뇌 대사·염증·세포활성 변화를 추적하는 분자영상 기술",
+                "examples": [
+                  "FDG-PET",
+                  "TSPO-PET",
+                  "Hyperpolarized MRI",
+                  "MRS"
+                ]
+              },
+              {
+                "name": "신규 뇌질환 표적 탐침 및 고특이도 영상화 기술",
+                "examples": [
+                  "Molecular Probe Imaging",
+                  "PET Radiotracer Imaging",
+                  "SPECT Radiotracer Imaging",
+                  "Multimodal Molecular Imaging"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "2. 대면적·대용량 3차원 광학영상",
+        "children": [
+          {
+            "name": "투명화 뇌조직 고속 3차원 영상",
+            "techs": [
+              {
+                "name": "투명화된 뇌·대용량 조직의 세포 수준 고속 3차원 영상 획득 기술",
+                "examples": [
+                  "LSFM",
+                  "Tiled Light-sheet Microscopy",
+                  "mesoSPIM"
+                ]
+              },
+              {
+                "name": "대형 시료의 균일 조명과 깊이별 해상도를 유지하는 광면영상 기술",
+                "examples": [
+                  "Multi-view Light-sheet Microscopy",
+                  "Dual-sided Illumination",
+                  "Adaptive Optics",
+                  "Beam Shaping(또는 Attenuation Compensation)"
+                ]
+              },
+              {
+                "name": "다중 형광표지 신호의 뇌 영역별 동시·반복 영상화 기술",
+                "examples": [
+                  "Multichannel Light-sheet Microscopy",
+                  "Spectral Imaging",
+                  "Sequential Multi-round Imaging",
+                  "Multiplexed Fluorescence Imaging"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "연속 절편 기반 뇌 영상",
+            "techs": [
+              {
+                "name": "절편 제작과 영상 획득을 연속 자동화한 뇌 영역별 고해상도 영상 기술",
+                "examples": [
+                  "serial two-photon tomography",
+                  "MOST",
+                  "fMOST"
+                ]
+              },
+              {
+                "name": "축삭·수상돌기 등 장거리 미세구조의 끊김 없는 뇌 영역별 추적 영상 기술",
+                "examples": [
+                  "Whole-brain Neuron Tracing",
+                  "Axon Tracing",
+                  "Sparse Labeling"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "3. 세포·시냅스 고해상도 영상",
+        "children": [
+          {
+            "name": "생체 심부 세포영상",
+            "techs": [
+              {
+                "name": "산란 조직 내 단일세포·세포소기관의 고해상도 생체영상 기술",
+                "examples": [
+                  "Two-photon Microscopy",
+                  "Three-photon Microscopy",
+                  "Adaptive-optics Multiphoton Microscopy"
+                ]
+              },
+              {
+                "name": "뇌 심부에서 광손상과 광퇴색을 줄인 장시간 반복영상 기술",
+                "examples": [
+                  "Three-photon Microscopy",
+                  "Adaptive Optics",
+                  "Resonant Scanning",
+                  "Remote Focusing"
+                ]
+              },
+              {
+                "name": "움직이는 생체 뇌에서 세포 형태와 동적 변화를 안정적으로 추적하는 기술",
+                "examples": [
+                  "Motion Correction Imaging",
+                  "Adaptive Optics",
+                  "Resonant Scanning",
+                  "Fast Volumetric Imaging"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "초고해상도 분자·시냅스 영상",
+            "techs": [
+              {
+                "name": "회절한계를 넘어 단백질·수용체·시냅스 구조를 나노미터 수준으로 영상화하는 기술",
+                "examples": [
+                  "STED",
+                  "PALM",
+                  "STORM",
+                  "MINFLUX"
+                ]
+              },
+              {
+                "name": "다중 분자표적의 나노스케일 위치와 상호작용을 정량화하는 기술",
+                "examples": [
+                  "DNA-PAINT",
+                  "Exchange-PAINT",
+                  "Expansion Microscopy",
+                  "Multiplexed Super-resolution Imaging"
+                ]
+              },
+              {
+                "name": "대면적·고속 초고해상도 영상과 장시간 관찰을 동시에 구현하는 기술",
+                "examples": [
+                  "Lattice Light-sheet Microscopy",
+                  "Instant SIM (iSIM)",
+                  "Structured Illumination Microscopy (SIM)",
+                  "Adaptive Optics"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "전자현미경 기반 초미세구조 영상",
+            "techs": [
+              {
+                "name": "시냅스·축삭·수상돌기의 나노미터급 연속 3차원 전자현미경 영상 기술",
+                "examples": [
+                  "Serial-section TEM",
+                  "SBF-SEM",
+                  "FIB-SEM",
+                  "Multi-beam SEM"
+                ]
+              },
+              {
+                "name": "대용량 뇌조직의 자동 연속절편·고속 전자현미경 영상 획득 기술",
+                "examples": [
+                  "ATUM-SEM",
+                  "SBF-SEM",
+                  "Multi-beam SEM",
+                  "Automated Tape-collecting Ultramicrotomy",
+                  "GridTape"
+                ]
+              },
+              {
+                "name": "동일 조직의 분자표지와 초미세 구조를 연계하는 상관광전자현미경 기술",
+                "examples": [
+                  "CLEM",
+                  "Cryo-CLEM",
+                  "Array Tomography",
+                  "Immuno-EM"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "4. 공간 분자·오믹스 정보 획득",
+        "children": [
+          {
+            "name": "단일세포 다중오믹스 분석",
+            "techs": [
+              {
+                "name": "뇌세포의 전사체·후성유전체·단백체를 단일세포 수준에서 고처리량 분석하는 기술",
+                "examples": [
+                  "scRNA-seq",
+                  "snRNA-seq",
+                  "scATAC-seq",
+                  "CITE-seq",
+                  "Single-cell Multiome"
+                ]
+              },
+              {
+                "name": "동일 세포에서 복수 오믹스 정보를 동시 측정하는 다중오믹스 기술",
+                "examples": [
+                  "10x Genomics Multiome",
+                  "SHARE-seq",
+                  "Paired-seq",
+                  "TEA-seq",
+                  "ECCITE-seq"
+                ]
+              },
+              {
+                "name": "희귀 세포유형과 질환 특이 세포상태를 고감도로 검출하는 기술",
+                "examples": [
+                  "SMART-seq3",
+                  "CEL-Seq2",
+                  "Seq-Well",
+                  "SPLiT-seq",
+                  "sci-RNA-seq"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "고해상도 공간전사체",
+            "techs": [
+              {
+                "name": "유전자 발현을 단일세포·아세포 수준에서 공간적으로 매핑하는 기술",
+                "examples": [
+                  "MERFISH",
+                  "seqFISH+",
+                  "In Situ Sequencing (ISS)",
+                  "Slide-seq",
+                  "Visium HD"
+                ]
+              },
+              {
+                "name": "대면적 뇌 조직의 고다중·고처리량 공간전사체 획득 기술",
+                "examples": [
+                  "Stereo-seq",
+                  "Slide-seqV2",
+                  "DBiT-seq",
+                  "Visium HD",
+                  "HDST (High-definition Spatial Transcriptomics)"
+                ]
+              },
+              {
+                "name": "조직 형태 보존과 분자 검출 민감도를 동시에 확보하는 공간전사체 기술",
+                "examples": [
+                  "Xenium",
+                  "CosMx SMI",
+                  "MERFISH",
+                  "seqFISH+",
+                  "Digital Spatial Profiling (DSP)"
+                ]
+              },
+              {
+                "name": "초고해상도 구조·분자 멀티모달 공간정보 획득 기술",
+                "examples": [
+                  "ExSeq",
+                  "Expansion Sequencing",
+                  "MERFISH + ExM",
+                  "seqFISH + ExM",
+                  "Expansion-assisted Spatial Transcriptomics"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "공간단백체·대사체 영상",
+            "techs": [
+              {
+                "name": "다수 단백질과 신호전달 분자의 공간 분포를 세포 수준에서 동시 측정하는 기술",
+                "examples": [
+                  "CODEX",
+                  "Imaging Mass Cytometry (IMC)",
+                  "MIBI",
+                  "CyCIF",
+                  "GeoMx DSP"
+                ]
+              },
+              {
+                "name": "뇌조직 내 대사물질·지질·약물의 무표지 공간분포 분석 기술",
+                "examples": [
+                  "MALDI-MSI",
+                  "DESI-MSI",
+                  "SIMS Imaging",
+                  "Spatial Metabolomics",
+                  "Raman Imaging"
+                ]
+              },
+              {
+                "name": "전사체·단백체·대사체의 동일 조직 다중 공간측정 기술",
+                "examples": [
+                  "Spatial Multiomics",
+                  "DBiT-seq",
+                  "SM-Omics",
+                  "GeoMx DSP",
+                  "Xenium + Proteomics Workflow"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "5. 세포·신경집단 기능 측정",
+        "children": [
+          {
+            "name": "세포 수준 신경활동 광학측정",
+            "techs": [
+              {
+                "name": "단일세포 수준 칼슘·막전압 동시 영상화 기술",
+                "examples": [
+                  "GCaMP Calcium Imaging",
+                  "Genetically Encoded Voltage Indicators (GEVIs)",
+                  "Two-photon Functional Imaging",
+                  "Miniscope"
+                ]
+              },
+              {
+                "name": "뇌 심부·자유행동 상태에서 신경활동을 장시간 안정적으로 측정하는 기술",
+                "examples": [
+                  "Miniscope",
+                  "Three-photon Imaging",
+                  "Head-mounted Two-photon Microscopy",
+                  "Fiber Photometry"
+                ]
+              },
+              {
+                "name": "대규모 세포집단의 고속 3차원 신경활동 영상 기술",
+                "examples": [
+                  "Light-sheet Functional Imaging",
+                  "SCAPE Microscopy",
+                  "Fast Volumetric Two-photon Imaging",
+                  "Random-access Microscopy"
+                ]
+              },
+              {
+                "name": "대면적 피질 신경집단의 시공간 활성패턴을 광시야로 측정하는 기술",
+                "examples": [
+                  "Wide-field Calcium Imaging",
+                  "Mesoscopic Fluorescence Imaging",
+                  "Optical Mesoscopy"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "신경화학·대사 동역학 측정",
+            "techs": [
+              {
+                "name": "신경전달물질·이온·대사물질의 시공간 변화를 생체 내 실시간 영상화하는 기술",
+                "examples": [
+                  "Genetically Encoded Neurotransmitter Sensors (GRAB",
+                  "iGluSnFR)",
+                  "GECIs",
+                  "pH Sensors",
+                  "ATP Sensors",
+                  "Fiber Photometry"
+                ]
+              },
+              {
+                "name": "세포·시냅스 수준 화학신호의 고감도·고선택적 측정 기술",
+                "examples": [
+                  "GRAB Sensors",
+                  "iGluSnFR",
+                  "dLight",
+                  "GPCR-based Sensors",
+                  "FRET Biosensors"
+                ]
+              },
+              {
+                "name": "복수 신경화학 신호와 전기활동을 동시 측정하는 기술",
+                "examples": [
+                  "Fiber Photometry + Electrophysiology",
+                  "Patch Clamp + Optical Imaging",
+                  "MEA + Fluorescence Imaging",
+                  "Opto-electrophysiology"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "세포·집단 전기생리 측정",
+            "techs": [
+              {
+                "name": "단일세포 막전위와 시냅스 전류의 정밀 전기생리 측정 기술",
+                "examples": [
+                  "Patch clamp",
+                  "Whole-cell recording"
+                ]
+              },
+              {
+                "name": "대규모 뉴런 집단의 고밀도·장시간 전기생리 측정 기술",
+                "examples": [
+                  "Neuropixels",
+                  "High-density MEA",
+                  "Chronic recording"
+                ]
+              },
+              {
+                "name": "피질 전기활동의 공간·시간적 기능 측정 기술",
+                "examples": [
+                  "ECoG",
+                  "μECoG",
+                  "High-density ECoG"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "6. 회로 연결성 추적 및 기능 검증",
+        "children": [
+          {
+            "name": "세포유형 특이적 회로추적",
+            "techs": [
+              {
+                "name": "특정 세포유형의 입력·출력 연결을 선택적으로 추적하는 기술",
+                "examples": [
+                  "AAV Tracing",
+                  "Rabies Virus Tracing",
+                  "Anterograde Tracing",
+                  "Retrograde Tracing",
+                  "Transsynaptic Tracing"
+                ]
+              },
+              {
+                "name": "다중 시냅스 연결과 투사 방향을 구분하는 뇌 회로추적 기술",
+                "examples": [
+                  "Monosynaptic Rabies Tracing",
+                  "Polysynaptic Viral Tracing",
+                  "HSV Tracing",
+                  "PRV Tracing"
+                ]
+              },
+              {
+                "name": "다수 회로를 동일 개체에서 병렬 추적하는 다중표지 기술",
+                "examples": [
+                  "Brainbow",
+                  "Multicolor Viral Labeling",
+                  "MAPseq Barcode Labeling",
+                  "Multiplex Viral Tracing"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "대규모 투사 연결성 측정",
+            "techs": [
+              {
+                "name": "바코드 기반 단일세포·세포집단의 축삭 투사 연결성 고처리량 매핑 기술",
+                "examples": [
+                  "MAPseq",
+                  "BARseq",
+                  "Projection Sequencing",
+                  "BRICseq",
+                  "Connect-seq"
+                ]
+              },
+              {
+                "name": "투사 연결성과 세포유형·유전자 발현 정보 연계 기술",
+                "examples": [
+                  "BARseq",
+                  "Epi-Retro-Seq",
+                  "MERGE-seq",
+                  "Retro-seq 계열"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "회로 인과기능 검증",
+            "techs": [
+              {
+                "name": "특정 세포·회로를 선택적으로 자극·억제하고 행동 및 신경반응을 측정하는 기술",
+                "examples": [
+                  "Optogenetics",
+                  "Chemogenetics (DREADDs)",
+                  "All-optical Physiology",
+                  "Closed-loop Circuit Interrogation"
+                ]
+              },
+              {
+                "name": "다중 뇌영역의 자극-반응 관계와 정보 흐름을 정량화하는 기술",
+                "examples": [
+                  "Multi-site Optogenetics",
+                  "Holographic Photostimulation",
+                  "Functional Connectivity Mapping",
+                  "Closed-loop Stimulation"
+                ]
+              },
+              {
+                "name": "회로 조작과 전기·광학 기록을 폐루프 방식으로 통합하는 기술",
+                "examples": [
+                  "Opto-electrophysiology",
+                  "Closed-loop Neuromodulation",
+                  "Optogenetics + Neuropixels",
+                  "All-optical Closed-loop Recording"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "7. 무표지·내인성 대비 영상",
+        "children": [
+          {
+            "name": "무표지 세포·조직 구조영상",
+            "techs": [
+              {
+                "name": "살아 있는 세포·조직의 굴절률·산란 기반 비파괴 정량 3차원 구조영상 기술",
+                "examples": [
+                  "QPI",
+                  "DHM",
+                  "ODT",
+                  "Phase Contrast Microscopy",
+                  "Reflectance Microscopy"
+                ]
+              },
+              {
+                "name": "대면적·고속 무표지 세포·조직 구조영상 획득 기술",
+                "examples": [
+                  "High-throughput QPI",
+                  "Tomographic Phase Microscopy",
+                  "Whole-slide Label-free Imaging",
+                  "High-speed ODT"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "무표지 분자·화학 영상",
+            "techs": [
+              {
+                "name": "지질·단백질·대사물질의 무표지 분자·화학 조성 영상 기술",
+                "examples": [
+                  "Raman Imaging",
+                  "CARS",
+                  "SRS",
+                  "FTIR Imaging",
+                  "O-PTIR"
+                ]
+              },
+              {
+                "name": "신경조직 화학조성의 고속·고해상도 3차원 영상 기술",
+                "examples": [
+                  "Hyperspectral Raman Imaging",
+                  "3D SRS",
+                  "CARS Microscopy",
+                  "Volumetric Vibrational Imaging"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "심부 단층·비선형 내인성 영상",
+            "techs": [
+              {
+                "name": "생체 뇌조직의 층상구조·혈관에 대한 고속 3차원 내인성 단층영상 기술",
+                "examples": [
+                  "OCT",
+                  "OCM",
+                  "OCTA",
+                  "Full-field OCT",
+                  "Swept-source OCT"
+                ]
+              },
+              {
+                "name": "자가형광·고조파 신호 기반 세포외기질·수초·혈관 영상 기술",
+                "examples": [
+                  "SHG",
+                  "THG",
+                  "Autofluorescence Imaging",
+                  "Two-photon Autofluorescence",
+                  "Multiphoton Label-free Imaging"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "8. 시료처리 및 영상 품질 향상 기반기술",
+        "children": [
+          {
+            "name": "조직투명화 및 시료처리",
+            "techs": [
+              {
+                "name": "대용량 조직의 균일 투명화 및 구조·분자정보 보존 기술",
+                "examples": [
+                  "CLARITY",
+                  "CUBIC",
+                  "iDISCO+",
+                  "SHIELD",
+                  "SWITCH",
+                  "PEGASOS"
+                ]
+              },
+              {
+                "name": "대용량 조직의 표준화 시료처리 및 장기 보존 기술",
+                "examples": [
+                  "Hydrogel Embedding",
+                  "Cryoprotection",
+                  "Tissue Fixation",
+                  "Sample Stabilization",
+                  "Standardized Tissue Processing"
+                ]
+              },
+              {
+                "name": "물리적 팽창 기반 초고해상도 시료처리 기술",
+                "examples": [
+                  "Expansion Microscopy (ExM)",
+                  "proExM",
+                  "ExR",
+                  "MAP"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "고다중·심부 분자표지",
+            "techs": [
+              {
+                "name": "대용량 조직 내부의 균일 분자표지 및 심부 표지 기술",
+                "examples": [
+                  "eFLASH",
+                  "Stochastic Electrotransport",
+                  "Active CLARITY",
+                  "Deep Immunolabeling",
+                  "Antibody Penetration Enhancement"
+                ]
+              },
+              {
+                "name": "다중 분자·세포유형·회로 특이 표지 기술",
+                "examples": [
+                  "CODEX",
+                  "CyCIF",
+                  "Brainbow",
+                  "Viral Labeling",
+                  "Cre-lox Labeling",
+                  "Intersectional Genetic Labeling"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "영상 왜곡 보정 및 품질 향상",
+            "techs": [
+              {
+                "name": "심부 조직의 광학 수차·산란 및 굴절률 불균일 보정 기술",
+                "examples": [
+                  "Adaptive Optics",
+                  "Wavefront Sensing",
+                  "Aberration Correction",
+                  "Refractive-index Matching",
+                  "Chromatic Aberration Correction"
+                ]
+              },
+              {
+                "name": "조직 팽창 과정의 형태학적 왜곡 정량화 및 공간 보정 기술",
+                "examples": [
+                  "Elastic Registration",
+                  "Deformation Correction",
+                  "Non-rigid Registration",
+                  "Expansion Distortion Correction",
+                  "Landmark-based Correction"
+                ]
+              },
+              {
+                "name": "저신호·고노이즈 영상의 해상도 및 정량성 복원 기술",
+                "examples": [
+                  "Deconvolution",
+                  "Spectral Unmixing",
+                  "Denoising",
+                  "AI-based Image Restoration",
+                  "Super-resolution Reconstruction"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "단일 모달 뇌지도 재구성",
+    "children": [
+      {
+        "name": "1. 뇌영역 공간구획 및 표준좌표화",
+        "children": [
+          {
+            "name": "뇌영역 공간구획",
+            "techs": [
+              {
+                "name": "뇌 해부영역 자동 구획 기술",
+                "examples": [
+                  "Brain Segmentation",
+                  "Cortical Parcellation",
+                  "Deep Learning Segmentation"
+                ]
+              },
+              {
+                "name": "뇌 미세영역·피질층 경계 추출 기술",
+                "examples": [
+                  "Laminar Segmentation",
+                  "Cytoarchitectonic Mapping"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "공간 정규화 및 좌표계 구축",
+            "techs": [
+              {
+                "name": "개체별 뇌형태 정규화 기술",
+                "examples": [
+                  "Affine registration",
+                  "Nonlinear registration",
+                  "Diffeomorphic registration"
+                ]
+              },
+              {
+                "name": "개체 간 해부학적 대응점 추정 기술",
+                "examples": [
+                  "Landmark-based registration",
+                  "Feature matching",
+                  "Shape correspondence"
+                ]
+              },
+              {
+                "name": "표준 뇌좌표계 자동 매핑 기술",
+                "examples": [
+                  "Atlas Registration",
+                  "Spatial Normalization",
+                  "Coordinate Mapping"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "참조공간 및 참조 뇌지도 구축",
+            "techs": [
+              {
+                "name": "집단 기반 표준 참조 뇌지도 생성 기술",
+                "examples": [
+                  "Population Averaging",
+                  "Template Construction",
+                  "Probabilistic Atlas Construction"
+                ]
+              },
+              {
+                "name": "연령·성별·질환 특이 참조 뇌지도 생성 기술",
+                "examples": [
+                  "Population Atlas Construction",
+                  "Statistical Atlas Construction"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Ontology 구축",
+            "techs": [
+              {
+                "name": "뇌영역·세포·회로 계층적 Ontology 구축 기술",
+                "examples": [
+                  "Ontology Engineering",
+                  "Knowledge Representation",
+                  "Semantic Modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "2. 세포·조직 객체 지도화",
+        "children": [
+          {
+            "name": "세포 객체 지도화",
+            "techs": [
+              {
+                "name": "뇌 세포 자동 검출·계수 기술",
+                "examples": [
+                  "Cell detection",
+                  "Nuclei detection",
+                  "Blob detection",
+                  "Deep learning segmentation"
+                ]
+              },
+              {
+                "name": "세포 위치·밀도 공간지도 생성 기술",
+                "examples": [
+                  "Cell-density mapping",
+                  "Kernel density estimation",
+                  "Point-cloud mapping"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "세포유형 지도화",
+            "techs": [
+              {
+                "name": "형태·표지 기반 세포유형 분류 기술",
+                "examples": [
+                  "Morphological classification",
+                  "Marker-based classification",
+                  "Phenotyping"
+                ]
+              },
+              {
+                "name": "세포유형별 공간분포 지도 생성 기술",
+                "examples": [
+                  "Cell-type mapping",
+                  "Spatial clustering",
+                  "Density mapping"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "조직구조 지도화",
+            "techs": [
+              {
+                "name": "혈관·신경교세포 등 조직구조 지도화 기술",
+                "examples": [
+                  "Vessel segmentation",
+                  "Glial cell detection",
+                  "Tissue network reconstruction"
+                ]
+              },
+              {
+                "name": "병변·병리조직 공간분포 지도화 기술",
+                "examples": [
+                  "Lesion segmentation",
+                  "Pathology mapping",
+                  "Abnormality detection"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "3. 신경세포 형태 재구성",
+        "children": [
+          {
+            "name": "신경돌기 추적",
+            "techs": [
+              {
+                "name": "축삭·수상돌기 자동 추적 기술",
+                "examples": [
+                  "Neuron tracing",
+                  "Centerline extraction",
+                  "Skeletonization"
+                ]
+              },
+              {
+                "name": "신경돌기 단절·분기 자동 연결 기술",
+                "examples": [
+                  "Graph-based tracing",
+                  "Path linking",
+                  "Topology-aware reconstruction"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "단일세포 3D 재구성",
+            "techs": [
+              {
+                "name": "단일 뉴런 3차원 형태 복원 기술",
+                "examples": [
+                  "3D morphology reconstruction",
+                  "Surface reconstruction",
+                  "Mesh generation"
+                ]
+              },
+              {
+                "name": "장거리 단일세포 투사경로 재구성 기술",
+                "examples": [
+                  "Whole-brain axon tracing",
+                  "Projection mapping",
+                  "Sparse labeling reconstruction"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "형태 정량화·분류",
+            "techs": [
+              {
+                "name": "뉴런 형태특성 자동 정량화 기술",
+                "examples": [
+                  "Morphometry",
+                  "Sholl analysis",
+                  "Branch analysis"
+                ]
+              },
+              {
+                "name": "형태 기반 뉴런 유형 분류 기술",
+                "examples": [
+                  "Morphological clustering",
+                  "Feature embedding",
+                  "Machine learning classification"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "4. 신경회로 연결망 재구성",
+        "children": [
+          {
+            "name": "시냅스 연결 재구성",
+            "techs": [
+              {
+                "name": "시냅스 자동 검출·연결관계 추정 기술",
+                "examples": [
+                  "Synapse detection",
+                  "EM segmentation",
+                  "Contact-site analysis"
+                ]
+              },
+              {
+                "name": "세포 간 미세회로 자동 재구성 기술",
+                "examples": [
+                  "Connectomic reconstruction",
+                  "Neurite linking",
+                  "Graph reconstruction"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "영역 간 투사망 재구성",
+            "techs": [
+              {
+                "name": "뇌영역 간 입력·출력 투사망 재구성 기술",
+                "examples": [
+                  "Anterograde tracing",
+                  "Retrograde tracing",
+                  "Molecular Barcoding (PRISM",
+                  "MAPseq",
+                  "BARseq)",
+                  "Projection quantification"
+                ]
+              },
+              {
+                "name": "세포유형 특이적 회로망 지도화 기술",
+                "examples": [
+                  "Cell-type-specific tracing",
+                  "Viral tracing",
+                  "Transsynaptic tracing"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "연결망 모델 생성",
+            "techs": [
+              {
+                "name": "구조적 연결행렬 생성 기술",
+                "examples": [
+                  "Connectivity matrix",
+                  "Adjacency matrix",
+                  "Weighted graph construction"
+                ]
+              },
+              {
+                "name": "계층적·방향성 회로 네트워크 모델링 기술",
+                "examples": [
+                  "Directed graph analysis",
+                  "Hierarchical network modeling",
+                  "Community detection"
+                ]
+              },
+              {
+                "name": "멀티스케일 신경회로 연결망 통합 기술",
+                "examples": [
+                  "Correlative Light and Electron Microscopy (CLEM)",
+                  "Cross-scale Registration",
+                  "Graph-based Connectome Integration"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "5. 단일 모달 기능·분자 지도화",
+        "children": [
+          {
+            "name": "기능활성 지도화",
+            "techs": [
+              {
+                "name": "자극·과제·상태별 뇌활성 공간지도 생성 기술",
+                "examples": [
+                  "Activation mapping",
+                  "Statistical parametric mapping",
+                  "Calcium activity mapping"
+                ]
+              },
+              {
+                "name": "시공간 뇌활동 패턴 지도화 기술",
+                "examples": [
+                  "Time-series analysis",
+                  "Event detection",
+                  "Dynamic functional mapping"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "기능연결 지도화",
+            "techs": [
+              {
+                "name": "뇌영역·세포집단 간 기능적 연결성 지도 생성 기술",
+                "examples": [
+                  "Functional connectivity",
+                  "Correlation analysis",
+                  "Coherence analysis"
+                ]
+              },
+              {
+                "name": "기능 네트워크 구성 및 동적 네트워크 상태 지도화 기술",
+                "examples": [
+                  "Network-state analysis",
+                  "Dynamic connectivity",
+                  "Graph analysis"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "분자정보 지도화",
+            "techs": [
+              {
+                "name": "유전자·단백질 발현 공간지도 생성 기술",
+                "examples": [
+                  "Spatial transcriptomics analysis",
+                  "In situ decoding",
+                  "Spatial proteomics"
+                ]
+              },
+              {
+                "name": "분자표지 기반 세포·뇌영역 특성 지도화 기술",
+                "examples": [
+                  "Marker mapping",
+                  "Molecular annotation",
+                  "Spatial clustering"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "6. 뇌지도 주석화 및 품질평가",
+        "children": [
+          {
+            "name": "자동 주석화",
+            "techs": [
+              {
+                "name": "뇌영역·세포·회로 자동 주석 기술",
+                "examples": [
+                  "Atlas Annotation",
+                  "Label Propagation",
+                  "Ontology Mapping"
+                ]
+              },
+              {
+                "name": "다중 객체 관계 기반 의미 주석 기술",
+                "examples": [
+                  "Semantic Annotation",
+                  "Knowledge Graph",
+                  "Rule-based Annotation"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "지도 검증",
+            "techs": [
+              {
+                "name": "뇌지도 공간 정확도·재현성 검증 기술",
+                "examples": [
+                  "Benchmark Validation",
+                  "Spatial Consistency Analysis",
+                  "Cross-dataset Validation"
+                ]
+              },
+              {
+                "name": "참조 뇌지도 기반 품질 검증 기술",
+                "examples": [
+                  "Atlas-based Validation",
+                  "Expert Curation"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "불확실성 평가",
+            "techs": [
+              {
+                "name": "지도 경계·객체·연결정보 불확실성 정량화 기술",
+                "examples": [
+                  "Bayesian Uncertainty Estimation",
+                  "Monte Carlo Dropout",
+                  "Confidence Estimation"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "7. 뇌지도 구축·분석 플랫폼",
+        "children": [
+          {
+            "name": "자동 구축 파이프라인",
+            "techs": [
+              {
+                "name": "대용량 뇌지도 자동 구축 기술",
+                "examples": [
+                  "Workflow orchestration",
+                  "Batch processing",
+                  "Distributed computing"
+                ]
+              },
+              {
+                "name": "인간–AI 협업형 지도 검수·교정 기술",
+                "examples": [
+                  "Human-in-the-loop",
+                  "Active learning",
+                  "Proofreading"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "뇌지도 데이터 관리",
+            "techs": [
+              {
+                "name": "뇌지도 데이터·메타데이터 통합관리 기술",
+                "examples": [
+                  "Database",
+                  "Metadata schema",
+                  "Data provenance",
+                  "Version control"
+                ]
+              },
+              {
+                "name": "뇌지도 표준 형식 변환·공유 기술",
+                "examples": [
+                  "Neuroglancer format",
+                  "OME-Zarr",
+                  "NIfTI",
+                  "SWC",
+                  "Standard API"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "다중스케일 시각화",
+            "techs": [
+              {
+                "name": "세포–회로–뇌 영역 연계 시각화 기술",
+                "examples": [
+                  "Multiresolution rendering",
+                  "Volume rendering",
+                  "Web atlas viewer"
+                ]
+              },
+              {
+                "name": "대용량 2D·3D 뇌지도 실시간 탐색 기술",
+                "examples": [
+                  "Tiled rendering",
+                  "Level of detail",
+                  "GPU visualization"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "지도 정량분석",
+            "techs": [
+              {
+                "name": "뇌영역·세포·회로 공간통계 분석 기술",
+                "examples": [
+                  "Spatial statistics",
+                  "Morphometry",
+                  "Density analysis"
+                ]
+              },
+              {
+                "name": "뇌지도 집단 비교·변이 분석 기술",
+                "examples": [
+                  "Group comparison",
+                  "Population analysis",
+                  "Statistical modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "멀티모달·질환특화 뇌지도 구축",
+    "children": [
+      {
+        "name": "1. 멀티모달 데이터 융합",
+        "children": [
+          {
+            "name": "구조·기능 정보 통합",
+            "techs": [
+              {
+                "name": "구조영상과 기능영상을 공간적으로 정합하여 통합 뇌지도를 구축하는 기술",
+                "examples": [
+                  "MRI-fMRI registration",
+                  "structure-function coupling(ex. DWI + fMRI)",
+                  "connectivity mapping"
+                ]
+              },
+              {
+                "name": "구조·기능 데이터의 통합 표현 및 분석 기술",
+                "examples": [
+                  "Multimodal representation learning",
+                  "cross-modal embedding",
+                  "Joint embedding"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "분자·세포 정보 통합",
+            "techs": [
+              {
+                "name": "구조·분자·세포 정보를 통합한 뇌지도 구축 기술",
+                "examples": [
+                  "Imaging transcriptomics",
+                  "spatial transcriptomics integration",
+                  "molecular atlas integration"
+                ]
+              },
+              {
+                "name": "다중 모달 기반 통합 뇌지도 생성 기술",
+                "examples": [
+                  "Multimodal fusion",
+                  "graph neural network",
+                  "Transformer-based fusion"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "2. 멀티스케일 뇌지도 통합",
+        "children": [
+          {
+            "name": "세포–회로–뇌영역 연계",
+            "techs": [
+              {
+                "name": "세포·회로·뇌영역 간 계층적 연계 기술",
+                "examples": [
+                  "Cell-to-circuit mapping",
+                  "hierarchical brain atlas"
+                ]
+              },
+              {
+                "name": "계층적 멀티스케일 뇌지도 생성 기술",
+                "examples": [
+                  "Multi-resolution atlas",
+                  "pyramid representation"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "이종 해상도 공간 연계",
+            "techs": [
+              {
+                "name": "이종 해상도 데이터의 공간 정합 기술",
+                "examples": [
+                  "MRI-LSFM registration",
+                  "LSFM-EM registration",
+                  "cross-scale registration"
+                ]
+              },
+              {
+                "name": "해상도 간 정보 변환 및 연계 기술",
+                "examples": [
+                  "Super-resolution",
+                  "image translation",
+                  "cross-scale alignment"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "3. 질환·집단 뇌지도 정합 및 비교",
+        "children": [
+          {
+            "name": "정상·질환 뇌지도 정합",
+            "techs": [
+              {
+                "name": "정상 참조지도와 질환 뇌영상 간 변형을 반영한 공간 정합 기술",
+                "examples": [
+                  "Lesion-aware registration",
+                  "pathology-aware registration",
+                  "deformable registration"
+                ]
+              },
+              {
+                "name": "질환 특이 해부학적 참조 뇌지도 생성 기술",
+                "examples": [
+                  "Disease-specific template",
+                  "shape modeling",
+                  "deformation-based morphometry"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "질환·집단 변이 분석",
+            "techs": [
+              {
+                "name": "정상 대비 질환 특이 공간 편차 지도 생성 기술",
+                "examples": [
+                  "Normative modeling",
+                  "deviation mapping",
+                  "differential mapping"
+                ]
+              },
+              {
+                "name": "연령·성별·집단 간 공간 변이 비교 및 집단 특성 분석 기술",
+                "examples": [
+                  "Population template",
+                  "cohort harmonization",
+                  "statistical atlas"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "4. 시계열 뇌지도 구축",
+        "children": [
+          {
+            "name": "발달·노화 뇌지도",
+            "techs": [
+              {
+                "name": "시계열 기반 뇌지도 구축 기술",
+                "examples": [
+                  "Longitudinal Registration",
+                  "Temporal Atlas Construction",
+                  "Disease Progression Modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "디지털 뇌모델 구현 및 활용",
+    "children": [
+      {
+        "name": "1. 구조 기반 디지털 뇌모델",
+        "children": [
+          {
+            "name": "뇌 연결망 기반 모델",
+            "techs": [
+              {
+                "name": "Connectome 기반 디지털 뇌모델 구축 기술",
+                "examples": [
+                  "Structural Connectome Analysis",
+                  "Graph-based Brain Modeling",
+                  "Graph Neural Network"
+                ]
+              },
+              {
+                "name": "구조·기능 통합 디지털 뇌모델 구축 기술",
+                "examples": [
+                  "Multimodal Data Integration",
+                  "Multiscale Brain Modeling"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "가상 구조 뇌모델",
+            "techs": [
+              {
+                "name": "개인별 가상 뇌모델 구축 기술",
+                "examples": [
+                  "The Virtual Brain (TVB; 플랫폼)",
+                  "Personalized Connectome Modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "2. 범용 AI 기반 디지털 뇌모델",
+        "children": [
+          {
+            "name": "Brain Foundation Model",
+            "techs": [
+              {
+                "name": "멀티모달 Brain Foundation Model 구축 기술",
+                "examples": [
+                  "Self-supervised Learning",
+                  "Multimodal Representation Learning"
+                ]
+              },
+              {
+                "name": "범용 뇌표현 학습 및 전이 기술",
+                "examples": [
+                  "Foundation Model Pre-training",
+                  "Transfer Learning"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "3. 기능 동역학 디지털 뇌모델",
+        "children": [
+          {
+            "name": "Whole-brain Dynamics",
+            "techs": [
+              {
+                "name": "뇌 동역학 디지털 뇌모델 구축 기술",
+                "examples": [
+                  "Neural Mass Model",
+                  "Neural Field Model"
+                ]
+              },
+              {
+                "name": "구조-기능 연계 동역학 모델링 기술",
+                "examples": [
+                  "Dynamic Causal Modeling (DCM)",
+                  "Network Dynamics Modeling"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "생성형 디지털 뇌모델",
+            "techs": [
+              {
+                "name": "가상 뇌신호 생성 기술",
+                "examples": [
+                  "Generative Brain Modeling",
+                  "Diffusion Model",
+                  "Generative AI",
+                  "Foundation Model Fine-tuning"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "4. 질환 특화 디지털 뇌모델",
+        "children": [
+          {
+            "name": "질환 디지털 뇌모델",
+            "techs": [
+              {
+                "name": "질환 기전 기반 디지털 뇌모델 구축 기술",
+                "examples": [
+                  "Disease Progression Modeling",
+                  "Causal Modeling"
+                ]
+              },
+              {
+                "name": "질환 특이 멀티모달 디지털 뇌모델 구축 기술",
+                "examples": [
+                  "Multimodal Data Integration",
+                  "Disease-specific Modeling"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "질환 예측 모델",
+            "techs": [
+              {
+                "name": "질환 진행 예측 기술",
+                "examples": [
+                  "Longitudinal Modeling",
+                  "Prognostic Modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "5. 개인 맞춤형 디지털 뇌모델",
+        "children": [
+          {
+            "name": "개인화 뇌모델",
+            "techs": [
+              {
+                "name": "개인 맞춤형 디지털 뇌모델 생성 기술",
+                "examples": [
+                  "Personalized Brain Modeling",
+                  "Parameter Estimation"
+                ]
+              },
+              {
+                "name": "개인별 모델 최적화 기술",
+                "examples": [
+                  "Bayesian Inference",
+                  "Model Personalization"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "뇌 디지털 트윈",
+            "techs": [
+              {
+                "name": "실시간 뇌 디지털 트윈 구축 기술",
+                "examples": [
+                  "Data Assimilation",
+                  "Online Model Updating"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "6. 디지털 뇌 시뮬레이션 및 활용",
+        "children": [
+          {
+            "name": "가상 뇌 시뮬레이션",
+            "techs": [
+              {
+                "name": "시뮬레이션 기술",
+                "examples": [
+                  "Whole-brain Simulation",
+                  "Virtual Brain Simulation"
+                ]
+              },
+              {
+                "name": "뇌자극 반응 예측 기술",
+                "examples": [
+                  "Brain Stimulation Modeling",
+                  "Computational Neuroscience"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "뇌지도 기반 활용",
+            "techs": [
+              {
+                "name": "BCI·뇌자극 연계 활용 기술",
+                "examples": [
+                  "Closed-loop Control",
+                  "Computational Neurostimulation",
+                  "Brain-Computer Co-modeling"
+                ]
+              },
+              {
+                "name": "신약개발·가상임상 활용 기술",
+                "examples": [
+                  "In silico Trial",
+                  "Computational Disease Modeling"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+/* =========================================================
+   3) 렌더링
+========================================================= */
+let techCounter = 0;
+const treeRoot = document.getElementById("tree");
+
+function el(tag, cls, html){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function renderTech(tech, path){
+  techCounter += 1;
+  const id = "tech_" + techCounter;
+  const box = el("div", "tech");
+  box.dataset.majorcat = path[0];
+  box.dataset.midcat = path[1];
+  box.dataset.subcat = path[2];
+  box.dataset.techname = tech.name;
+
+  const exHtml = (tech.examples || [])
+    .map(x => `<span class="example-chip">${x}</span>`)
+    .join("");
+
+  box.innerHTML = `
+    <div class="tech-head">
+      <input type="checkbox" id="${id}_chk">
+      <div>
+        <label class="tech-name" for="${id}_chk">${tech.name}</label>
+        <div class="tech-examples"><b>관련 기법 예시</b> · ${exHtml || "-"}</div>
+      </div>
+    </div>
+    <div class="tech-detail">
+      <div class="priority-group">
+        <span class="lbl">우선순위</span>
+        <div class="priority-opts">
+          <label><input type="radio" name="${id}_pri" value="상"><span>상</span></label>
+          <label><input type="radio" name="${id}_pri" value="중"><span>중</span></label>
+          <label><input type="radio" name="${id}_pri" value="하"><span>하</span></label>
+        </div>
+      </div>
+      <div class="comment-group">
+        <span class="lbl">자유 의견 (현재 기술 수준, 필요 이유 등)</span>
+        <textarea id="${id}_cmt" placeholder="예: 현재 기술 수준은 TRL 3~4 수준이며, 2년 내 확보가 필요"></textarea>
+      </div>
+    </div>
+  `;
+
+  const chk = box.querySelector(`#${id}_chk`);
+  chk.addEventListener("change", () => {
+    box.classList.toggle("checked", chk.checked);
+    updateCount();
+  });
+
+  // 우선순위 라디오: 이미 선택된 항목을 다시 클릭하면 선택 해제
+  box.querySelectorAll(".priority-opts input[type=radio]").forEach(radio => {
+    radio.addEventListener("mousedown", () => {
+      radio.dataset.wasChecked = radio.checked;
+    });
+    radio.addEventListener("click", () => {
+      if (radio.dataset.wasChecked === "true") {
+        radio.checked = false;
+      }
+    });
+  });
+
+  return box;
+}
+
+function renderSub(sub, path){
+  const details = el("details", "level lv-sub");
+  details.innerHTML = `<summary><span class="arrow">▶</span><span class="tag">소분류</span> ${sub.name}</summary>`;
+  const inner = el("div", "body-inner");
+  sub.techs.forEach(t => inner.appendChild(renderTech(t, [...path, sub.name])));
+  details.appendChild(inner);
+  return details;
+}
+
+function renderMid(mid, path){
+  const details = el("details", "level lv-mid");
+  details.innerHTML = `<summary><span class="arrow">▶</span><span class="tag">중분류</span> ${mid.name}</summary>`;
+  const inner = el("div", "body-inner");
+  mid.children.forEach(s => inner.appendChild(renderSub(s, [...path, mid.name])));
+  details.appendChild(inner);
+  return details;
+}
+
+function renderMajor(major, idx){
+  const details = el("details", "level lv-major");
+  details.open = (idx === 0);
+  details.innerHTML = `<summary><span class="arrow">▶</span><span class="tag">대분류</span> ${major.name}</summary>`;
+  const inner = el("div", "body-inner");
+  major.children.forEach(m => inner.appendChild(renderMid(m, [major.name])));
+  details.appendChild(inner);
+  return details;
+}
+
+DATA.forEach((major, idx) => treeRoot.appendChild(renderMajor(major, idx)));
+
+/* =========================================================
+   4) 전체 펼치기 / 접기
+========================================================= */
+document.getElementById("expandAll").addEventListener("click", () => {
+  document.querySelectorAll("details.level").forEach(d => d.open = true);
+});
+document.getElementById("collapseAll").addEventListener("click", () => {
+  document.querySelectorAll("details.level").forEach(d => d.open = false);
+});
+
+/* =========================================================
+   5) 선택 개수 카운트
+========================================================= */
+function updateCount(){
+  const n = document.querySelectorAll(".tech input[type=checkbox]:checked").length;
+  document.getElementById("checkedCount").textContent = `선택된 핵심기술: ${n}개`;
+}
+
+/* =========================================================
+   6) 응답 수집
+========================================================= */
+function collectResponses(){
+  const items = [];
+  document.querySelectorAll(".tech").forEach(box => {
+    const chk = box.querySelector("input[type=checkbox]");
+    if(!chk.checked) return;
+    const pri = box.querySelector("input[type=radio]:checked");
+    const cmt = box.querySelector("textarea");
+    items.push({
+      majorCategory: box.dataset.majorcat,
+      middleCategory: box.dataset.midcat,
+      subCategory: box.dataset.subcat,
+      techName: box.dataset.techname,
+      priority: pri ? pri.value : "",
+      comment: cmt ? cmt.value.trim() : ""
+    });
+  });
+  return {
+    respondentName: document.getElementById("r-name").value.trim(),
+    respondentEmail: document.getElementById("r-email").value.trim(),
+    submittedAt: new Date().toISOString(),
+    items
+  };
+}
+
+/* =========================================================
+   7) 파일로 저장 (백업/오프라인 전달용)
+========================================================= */
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  const data = collectResponses();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const namePart = data.respondentName ? data.respondentName.replace(/\s+/g,"_") : "응답자";
+  a.download = `기술트리_수요조사_${namePart}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* =========================================================
+   8) 구글시트로 제출
+========================================================= */
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const statusEl = document.getElementById("statusMsg");
+  const data = collectResponses();
+
+  if(!data.respondentName){
+    statusEl.textContent = "이름/소속을 입력해주세요.";
+    statusEl.className = "status err";
+    return;
+  }
+  if(!data.respondentEmail){
+    statusEl.textContent = "이메일을 입력해주세요. (중복 제출 확인에 사용됩니다)";
+    statusEl.className = "status err";
+    return;
+  }
+  if(data.items.length === 0){
+    statusEl.textContent = "체크된 핵심기술이 없습니다. 개발이 필요한 항목을 선택해주세요.";
+    statusEl.className = "status err";
+    return;
+  }
+  if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("여기에")){
+    statusEl.textContent = "제출 서버가 아직 설정되지 않았어요. '결과 파일로 저장'을 이용해주세요.";
+    statusEl.className = "status err";
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  statusEl.textContent = "제출 중...";
+  statusEl.className = "status";
+
+  try{
+    const resp = await fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+
+    if(result.result === "duplicate"){
+      statusEl.textContent = "이미 이 이메일로 제출된 응답이 있습니다. 수정이 필요하면 담당자에게 문의해주세요.";
+      statusEl.className = "status err";
+      btn.disabled = false;
+    }else if(result.result === "success"){
+      statusEl.textContent = "제출이 완료되었습니다. 참여해주셔서 감사합니다!";
+      statusEl.className = "status ok";
+    }else{
+      statusEl.textContent = "제출 중 문제가 발생했습니다. '결과 파일로 저장' 후 담당자에게 전달해주세요.";
+      statusEl.className = "status err";
+      btn.disabled = false;
+    }
+  }catch(err){
+    // 서버까지 요청은 전달됐을 수 있지만, 결과 확인에 실패한 경우
+    statusEl.textContent = "제출은 전송했지만 결과 확인에 실패했습니다. 구글시트에서 반영 여부를 확인하거나, 안 보이면 '결과 파일로 저장' 후 담당자에게 전달해주세요.";
+    statusEl.className = "status err";
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
